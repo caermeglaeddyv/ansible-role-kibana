@@ -1,0 +1,99 @@
+---
+# tasks file for kibana
+- import_tasks: create_certs.yml
+  when: kibana_certs_create
+  tags:
+  - never
+
+- name: disable selinux
+  selinux:
+    state: disabled
+  when: ansible_selinux.status != 'disabled'
+
+- name: reboot all machines
+  reboot:
+    msg: "Rebooting machines after disabling SELinux..."
+  when: ansible_selinux.status != 'disabled'
+  tags:
+  - never
+
+- name: add elastic yum repo
+  yum_repository:
+    name: elasticsearch-{{ kibana_version }}.x
+    description: elasticsearch repository for {{ kibana_version }}.x packages
+    baseurl: https://artifacts.elastic.co/packages/{{ kibana_version }}.x/yum
+    gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    gpgcheck: yes
+
+- name: install kibana
+  yum:
+    name:
+    - kibana-{{ kibana_version }}.{{ kibana_revision }}
+    state: present
+    allow_downgrade: yes
+
+- name: copy kibana config
+  template:
+    src: etc_kibana_kibana.yml.j2
+    dest: /etc/kibana/kibana.yml
+    mode: 0640
+  tags:
+  - never
+
+- name: open firewall ports
+  firewalld:
+    immediate: yes
+    permanent: yes
+    port: 5601/tcp
+    state: enabled
+
+- name: copy certs to servers
+  copy:
+    src: "{{ kibana_project_dir }}/kibana/{{ item }}"
+    dest: /etc/kibana/{{ item }}
+    mode: 0640
+    group: kibana
+  with_items:
+  - kibana.pem
+  - kibana-key.pem
+  when: kibana_elasticsearch_ssl_verification_mode != "none"
+
+- name: copy elasticsearch certs to servers
+  copy:
+    src: "{{ kibana_project_dir }}/kibana/{{ item }}"
+    dest: /etc/kibana/{{ item }}
+    mode: 0640
+    group: kibana
+  with_items:
+  - elasticsearch-key.pem
+  - elasticsearch.pem
+  - elasticsearch-ca.pem
+
+- name: create kibana keystore
+  become_user: kibana
+  command: /usr/share/kibana/bin/kibana-keystore create
+
+- name: add kibana elasticsearch password to kibana keystore
+  become_user: kibana
+  command: /usr/bin/printf "{{ kibana_pass }}" | /usr/share/kibana/bin/kibana-keystore add elasticsearch.password -x -s
+  no_log: true
+
+- name: add encryption keys to kibana keystore
+  become_user: kibana
+  command: /usr/bin/printf "{{ kibana_encryption_key }}" | /usr/share/kibana/bin/kibana-keystore add {{ item }} -x -s
+  no_log: true
+  with_items:
+  - xpack.security.encryptionKey
+  - xpack.reporting.encryptionKey
+
+- name: start and enable kibana
+  systemd:
+    daemon_reload: yes
+    name: kibana
+    enabled: yes
+    state: started
+
+- name: pause playbook execution
+  pause:
+    prompt: "Waiting until kibana cluster is bootstrapped..."
+    minutes: 2

@@ -1,0 +1,37 @@
+---
+- name: create and/or update kibana spaces
+  uri:
+    url: https://{{ ansible_play_batch | first }}:5601/api/spaces/{{ item.space }}
+    method: '{{ item.method }}'
+    body: '{{ item.body | to_json }}'
+    body_format: json
+    url_username: elastic
+    url_password: "{{ kibana_elastic_pass }}"
+    force_basic_auth: yes
+    validate_certs: no
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+  delegate_to: "{{ ansible_play_batch | first }}"
+  run_once: true
+  with_items: "{{ kibana_spaces }}"
+  when: kibana_spaces | length
+
+- name: create roles in kibana
+  uri:
+    url: https://{{ ansible_play_batch | first }}:5601/api/security/role/{{ item.role }}
+    method: PUT
+    body: '{{ item.body }}'
+    body_format: json
+    url_username: elastic
+    url_password: "{{ kibana_elastic_pass }}"
+    force_basic_auth: yes
+    validate_certs: no
+    status_code: 200, 204
+    headers:
+      kbn-xsrf: "true"
+      Content-Type: "application/json"
+  delegate_to: "{{ ansible_play_batch | first }}"
+  run_once: true
+  with_items: "{{ kibana_roles }}"
+  when: kibana_roles | length

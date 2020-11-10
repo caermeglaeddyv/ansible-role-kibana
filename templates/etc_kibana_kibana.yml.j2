@@ -1,0 +1,62 @@
+server:
+  name: {{ kibana_server_name }}
+  host: {{ ansible_default_ipv4.address }}
+  ssl:
+    enabled: true
+    redirectHttpFromPort: true
+    supportedProtocols: [ "TLSv1.2" ]
+    key: /etc/kibana/kibana-key.pem
+    certificate: /etc/kibana/kibana.pem
+
+elasticsearch:
+  hosts:
+  {% if kibana_elasticsearch_hosts %}
+  {% for server in kibana_elasticsearch_hosts -%}
+  - https://{{ server }}:9200
+  {% endfor %}
+  {% else%}
+  {% for server in ansible_play_batch -%}
+  - https://{{ server }}:9200
+  {% endfor %}
+  {% endif %}
+  username: kibana
+  ssl:
+    verificationMode: {{ kibana_elasticsearch_ssl_verification_mode }}
+    {% if kibana_elasticsearch_ssl_verification_mode != "none" %}
+    key: /etc/kibana/elasticsearch-key.pem
+    certificate: /etc/kibana/elasticsearch.pem
+    certificateAuthorities: [ "/etc/kibana/elasticsearch-ca.pem" ]
+    {% endif %}
+
+logging:
+  timezone: {{ kibana_logging_timezone }}
+
+csp:
+  strict: true
+
+xpack:
+  apm:
+    enabled: false
+    ui:
+      enabled: false
+  graph:
+    enabled: false
+  ml:
+    enabled: false
+  infra:
+    enabled: false
+  reporting:
+    enabled: false
+  monitoring:
+    enabled: false
+    ui:
+      enabled: false
+    kibana:
+      collection:
+        enabled: false
+    elasticsearch:
+      logFetchCount: 50
+  security:
+    enabled: true
+    secureCookies: true
+    sessionTimeout: {{ kibana_session_timeout }}

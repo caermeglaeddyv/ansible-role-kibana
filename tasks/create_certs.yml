@@ -1,0 +1,40 @@
+---
+- name: create kibana directory
+  file:
+    path: "{{ kibana_project_dir }}/kibana"
+    state: directory
+  delegate_to: localhost
+  run_once: true
+  become: no
+  tags:
+  - never
+
+- name: generate cfssl config files
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ kibana_project_dir }}/kibana/{{ item }}"
+  with_items:
+  - ca.json
+  - server.json
+  - kibana.json
+  delegate_to: localhost
+  run_once: true
+  become: no
+  tags:
+  - never
+
+- name: generate kibana certificates
+  shell: |
+    set -o pipefail \
+    && cfssl gencert -initca ca.json | cfssljson -bare kibana-ca \
+    && cfssl gencert -ca kibana-ca.pem -ca-key kibana-ca-key.pem \
+    -config server.json -profile=server kibana.json | cfssljson -bare kibana
+  environment:
+    ANSIBLE_KIBANA_WORKDIR: "{{ kibana_project_dir }}/kibana"
+  args:
+    chdir: $ANSIBLE_KIBANA_WORKDIR
+  delegate_to: localhost
+  run_once: true
+  become: no
+  tags:
+  - never
