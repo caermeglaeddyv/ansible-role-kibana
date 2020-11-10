@@ -3,30 +3,29 @@ server:
   host: {{ ansible_default_ipv4.address }}
   ssl:
     enabled: true
-    redirectHttpFromPort: true
     supportedProtocols: [ "TLSv1.2" ]
     key: /etc/kibana/kibana-key.pem
     certificate: /etc/kibana/kibana.pem
 
 elasticsearch:
   hosts:
-  {% if kibana_elasticsearch_hosts %}
+  {% if kibana_elasticsearch_hosts -%}
   {% for server in kibana_elasticsearch_hosts -%}
   - https://{{ server }}:9200
-  {% endfor %}
-  {% else%}
+  {% endfor -%}
+  {% else -%}
   {% for server in ansible_play_batch -%}
   - https://{{ server }}:9200
-  {% endfor %}
-  {% endif %}
+  {% endfor -%}
+  {% endif -%}
   username: kibana
   ssl:
-    verificationMode: {{ kibana_elasticsearch_ssl_verification_mode }}
-    {% if kibana_elasticsearch_ssl_verification_mode != "none" %}
+    {% if kibana_elasticsearch_ssl_verification_mode != "none" -%}
     key: /etc/kibana/elasticsearch-key.pem
     certificate: /etc/kibana/elasticsearch.pem
     certificateAuthorities: [ "/etc/kibana/elasticsearch-ca.pem" ]
-    {% endif %}
+    {% endif -%}
+    verificationMode: {{ kibana_elasticsearch_ssl_verification_mode }}
 
 logging:
   timezone: {{ kibana_logging_timezone }}

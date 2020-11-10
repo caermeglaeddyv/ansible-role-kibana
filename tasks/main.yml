@@ -37,6 +37,7 @@
     src: etc_kibana_kibana.yml.j2
     dest: /etc/kibana/kibana.yml
     mode: 0640
+    group: kibana
   tags:
   - never
 
@@ -75,12 +76,19 @@
 
 - name: add kibana elasticsearch password to kibana keystore
   become_user: kibana
-  command: /usr/bin/printf "{{ kibana_pass }}" | /usr/share/kibana/bin/kibana-keystore add elasticsearch.password -x -s
+  shell: |
+    set -o pipefail \
+    && /usr/bin/printf "{{ kibana_pass }}" \
+    | /usr/share/kibana/bin/kibana-keystore add \
+    elasticsearch.password -x -s
   no_log: true
 
 - name: add encryption keys to kibana keystore
   become_user: kibana
-  command: /usr/bin/printf "{{ kibana_encryption_key }}" | /usr/share/kibana/bin/kibana-keystore add {{ item }} -x -s
+  shell: |
+    set -o pipefail \
+    && /usr/bin/printf "{{ kibana_encryption_key }}" \
+    | /usr/share/kibana/bin/kibana-keystore add {{ item }} -x -s
   no_log: true
   with_items:
   - xpack.security.encryptionKey

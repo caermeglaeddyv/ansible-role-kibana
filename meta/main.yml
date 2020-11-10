@@ -22,7 +22,3 @@ galaxy_info:
   - cfssljson
   - transparenthugepages
   - nothp
-
-dependencies:
-- role: no_thp
-  when: kibana_no_thp
