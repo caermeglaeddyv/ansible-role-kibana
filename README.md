@@ -14,7 +14,7 @@ Requirements
 ------------
 
 This is not strict requirements and it may not work with other versions than tested ones.
-Anyway. feel yourself free to test by yourself, suggest addition of new functionality and contribute.
+Anyway. feel free to test by yourself, suggest addition of new functionality and contribute.
 
 Role is tested with:
 - Ansible version >= 2.8.6
@@ -22,7 +22,7 @@ Role is tested with:
 
 Currently supports installation of Kibana versions >= 7.3.
 
-cfssl and cfssljson must be installed on localhost if elasticsearch_certs_create variable is set to True (default).
+cfssl and cfssljson must be installed on localhost if kibana_cfssl variable is set to True (default).
 
 
 Role Variables
@@ -36,6 +36,9 @@ Variables and their descriptions copied from defaults/main.yml
 # defaults file for kibana
 
 
+# Use CFSSL to create kibana Root CA and self-signed certificates:
+kibana_cfssl: true
+
 # Variable which is common for most projects, used in
 # configuration files or file/directory names.
 # By default used as reference for kibana_project_dir variable:
@@ -45,50 +48,6 @@ kibana_project_name: test
 # project working directory on the localhost for the role.
 # Currently is used to store created certificates:
 kibana_project_dir: "{{ kibana_project_name }}"
-
-# Use CFSSL to create kibana Root CA and self-signed certificates:
-kibana_certs_create: true
-
-# Common name for kibana Root CA:
-kibana_certs_ca_cn: "kibana root ca"
-
-# Key algorithm for kibana Root CA:
-kibana_certs_ca_key_algo: "rsa"
-
-# Key size for kibana Root CA:
-kibana_certs_ca_key_size: 4096
-
-# Distinguished names for kibana Root CA:
-kibana_certs_ca_names:
-- c: "Neverland"
-  l: "Rivia"
-  o: "Witchers"
-  ou: "Caer Morhen"
-
-# kibana server certificate expiry in hours:
-kibana_certs_server_expiry: "17520h"
-
-# Common name for kibana server certificate:
-kibana_certs_server_cn: "kibana server"
-
-# Key algorithm for kibana server certificate:
-kibana_certs_server_key_algo: "rsa"
-
-# Key size for kibana server certificate:
-kibana_certs_server_key_size: 2048
-
-# Distinguished names for kibana server certificate:
-kibana_certs_server_names:
-- c: "Neverland"
-  l: "Rivia"
-  o: "Witchers"
-  ou: "Caer Morhen"
-
-# Hostnames, DNS names and/or IP addressed for which kibana
-# server certificate will be signed. If your server hostnames
-# and IP addressed are different from ones in inventory,
-# provide them manually using this variable:
-kibana_certs_server_hosts: []
 
 # Version of kibana package which will be installed:
 kibana_version: 7
@@ -174,7 +133,7 @@ kibana_roles: []
 Dependencies
 ------------
 
-cfssl and cfssljson must be installed on localhost if elasticsearch_certs_create variable is set to True (default).
+cfssl and cfssljson must be installed on localhost if kibana_cfssl variable is set to True (default).
 
 
 Example Playbook

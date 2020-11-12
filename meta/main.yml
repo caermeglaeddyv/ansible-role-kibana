@@ -22,3 +22,7 @@ galaxy_info:
   - cfssljson
   - transparenthugepages
   - nothp
+
+dependencies:
+- role: cfssl
+  when: mongodb_cfssl
