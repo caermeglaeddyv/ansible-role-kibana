@@ -25,4 +25,4 @@ galaxy_info:
 
 dependencies:
 - role: cfssl
-  when: mongodb_cfssl
+  when: kibana_cfssl
