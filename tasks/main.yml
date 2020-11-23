@@ -66,10 +66,12 @@
   - elasticsearch-ca.pem
 
 - name: create kibana keystore
+  become: true
   become_user: kibana
   command: /usr/share/kibana/bin/kibana-keystore create
 
 - name: add kibana elasticsearch password to kibana keystore
+  become: true
   become_user: kibana
   shell: |
     set -o pipefail \
@@ -79,6 +81,7 @@
   no_log: true
 
 - name: add encryption keys to kibana keystore
+  become: true
   become_user: kibana
   shell: |
     set -o pipefail \
